@@ -49,3 +49,5 @@ _SpecRunner.html
 report/junit.xml
 coverage
 localization-out/
+src-out/
+min/css/themes/crm/

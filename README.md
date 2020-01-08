@@ -1,5 +1,5 @@
 # Infor CRM Argos Platform SDK
-argos-sdk is a JavaScript and HTML5 mobile SDK built on top of the [dojo library](http://dojotoolkit.org/). Out of the box it comes with a [SData client library](https://github.com/Saleslogix/SDataJavaScriptClientLib) for communicating to [SData](http://sage.github.io/SData-2.0/pages/core/0100/) endpoints.
+typhon-sdk is a JavaScript and HTML5 mobile SDK built on top of the [dojo library](http://dojotoolkit.org/). Out of the box it comes with a [SData client library](https://github.com/Saleslogix/SDataJavaScriptClientLib) for communicating to [SData](http://sage.github.io/SData-2.0/pages/core/0100/) endpoints.
 
 ## Installation
 
@@ -18,17 +18,17 @@ argos-sdk is a JavaScript and HTML5 mobile SDK built on top of the [dojo library
 
   - `mkdir mobile`
   - `cd mobile`
-  - `git clone git@github.com:Saleslogix/argos-sdk.git`
+  - `git clone git@github.com:Saleslogix/typhon-sdk.git`
 
 You should end up with a folder structure like this:
 
-- C:\code\mobile\argos-sdk\
+- C:\code\mobile\typhon-sdk\
 - C:\code\mobile\products\
 
 The products sub-folder is for applications that reference the SDK.
 
 ### Building the source
-- Open a command prompt in the argos-sdk directory (C:\code\mobile\argos-sdk)
+- Open a command prompt in the typhon-sdk directory (C:\code\mobile\typhon-sdk)
 - Run `npm install` to install dependencies specified in the project.json file
 - Run `npm run build`
 

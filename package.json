@@ -1,9 +1,9 @@
 {
-  "name": "argos-sdk",
+  "name": "typhon-sdk",
   "version": "4.1.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Saleslogix/argos-sdk"
+    "url": "https://github.com/infor-crmce/typhon-sdk"
   },
   "scripts": {
     "test": "npm run build && grunt test",
