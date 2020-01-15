@@ -33,7 +33,10 @@ const __class = declare('argos._LegacySDataListMixin', null, /** @lends argos._L
   requestData: function requestData() {
     $(this.domNode).addClass('list-loading');
     this.listLoading = true;
-
+      if (this.id == 'attachment_offlinelist') {
+          this.processFeed(null);
+          return;
+      }
     const request = this.createRequest();
     request.read({
       success: this.onRequestDataSuccess,
@@ -102,70 +105,132 @@ const __class = declare('argos._LegacySDataListMixin', null, /** @lends argos._L
    * @param {Object} feed The SData result
    * @deprecated
    */
-  processFeed: function processFeed(feed) {
-    if (!this.feed) {
-      this.set('listContent', '');
-    }
+    processFeed: function processFeed(feed) {
+        var context = this;
+        if (this.id == 'attachment_offlinelist') {
+            const docfrag = document.createDocumentFragment();
+            let row = [];
 
-    this.feed = feed;
+            var dbRequest = indexedDB.open("dataFiles", "1.0");
+            dbRequest.onsuccess = function (event) {
+                var db = dbRequest.result;
+                var readWriteMode = typeof IDBTransaction.READ_WRITE == "undefined" ? "readwrite" : IDBTransaction.READ_WRITE;
+                var transaction = db.transaction(["files"], readWriteMode);
+                var objectStore = transaction.objectStore("files");
+                let i = 0;
+                objectStore.openCursor().onsuccess = function (event) {
+                    var cursor = event.target.result;
+                    if (cursor) {
+                        const entry = { $key: i, description: cursor.key, fileName: cursor.key, createUser: "ADMIN" };
+                        entry.$descriptor = cursor.key;
+                        context.entries[i++] = entry;
 
-    if (this.feed.$totalResults === 0) {
-      this.set('listContent', this.noDataTemplate.apply(this));
-    } else if (feed.$resources) {
-      const docfrag = document.createDocumentFragment();
-      let row = [];
-      const count = feed.$resources.length;
-      for (let i = 0; i < count; i++) {
-        const entry = feed.$resources[i];
-        entry.$descriptor = entry.$descriptor || feed.$descriptor;
-        this.entries[entry.$key] = entry;
+                        let rowNode;
+                        if (context.isCardView) {
+                        rowNode = $(context.rowTemplate.apply(entry, context));
+                        } else {
+                            rowNode = $(context.liRowTemplate.apply(entry, context));
+                        }
 
-        let rowNode;
-        if (this.isCardView) {
-          rowNode = $(this.rowTemplate.apply(entry, this));
-        } else {
-          rowNode = $(this.liRowTemplate.apply(entry, this));
+                        if (context.isCardView && context.multiColumnView) {
+                            const column = $(`<div class="${context.multiColumnClass} columns">`).append(rowNode);
+                            row.push(column);
+                            //if ((i + 1) % context.multiColumnCount === 0 || i === count - 1) {
+                                const rowTemplate = $('<div class="row"></div>');
+                                row.forEach((element) => {
+                                    rowTemplate.append(element);
+                                });
+                                docfrag.appendChild(rowTemplate.get(0));
+                                row = [];
+                            //}
+                        } else {
+                            docfrag.appendChild(rowNode.get(0));
+                        }
+
+                        context.onApplyRowTemplate(entry, rowNode);
+                        if (context.relatedViews.length > 0) {
+                            context.onProcessRelatedViews(entry, rowNode, feed);
+                        }
+                        cursor.continue();
+                    }
+                    if (docfrag.childNodes.length > 0) {
+                        $(context.contentNode).append(docfrag);
+                    }
+                    $(".busy-indicator-container").remove();
+                    context.isRefreshing = false;
+                    context.listLoading = false;
+
+                };
+            }
         }
+        else
+        {
+            ///////////////////////////////////////////////////////
+            if (!this.feed) {
+                this.set('listContent', '');
+            }
 
-        if (this.isCardView && this.multiColumnView) {
-          const column = $(`<div class="${this.multiColumnClass} columns">`).append(rowNode);
-          row.push(column);
-          if ((i + 1) % this.multiColumnCount === 0 || i === count - 1) {
-            const rowTemplate = $('<div class="row"></div>');
-            row.forEach((element) => {
-              rowTemplate.append(element);
-            });
-            docfrag.appendChild(rowTemplate.get(0));
-            row = [];
-          }
-        } else {
-          docfrag.appendChild(rowNode.get(0));
+            this.feed = feed;
+
+            if (this.feed.$totalResults === 0) {
+                this.set('listContent', this.noDataTemplate.apply(this));
+            } else if (feed.$resources) {
+                const docfrag = document.createDocumentFragment();
+                let row = [];
+                const count = feed.$resources.length;
+                for (let i = 0; i < count; i++) {
+                    const entry = feed.$resources[i];
+                    //const entry = { $key: 'asdf', description: 'asdf', fileName: 'asdf', createUser: "ADMIN" };
+                    entry.$descriptor = entry.$descriptor || entry.fileName || feed.$descriptor;
+                    this.entries[entry.$key] = entry;
+
+                    let rowNode;
+                    if (this.isCardView) {
+                        rowNode = $(this.rowTemplate.apply(entry, this));
+                    } else {
+                        rowNode = $(this.liRowTemplate.apply(entry, this));
+                    }
+
+                    if (this.isCardView && this.multiColumnView) {
+                        const column = $(`<div class="${this.multiColumnClass} columns">`).append(rowNode);
+                        row.push(column);
+                        if ((i + 1) % this.multiColumnCount === 0 || i === count - 1) {
+                            const rowTemplate = $('<div class="row"></div>');
+                            row.forEach((element) => {
+                                rowTemplate.append(element);
+                            });
+                            docfrag.appendChild(rowTemplate.get(0));
+                            row = [];
+                        }
+                    } else {
+                        docfrag.appendChild(rowNode.get(0));
+                    }
+
+                    this.onApplyRowTemplate(entry, rowNode);
+                    if (this.relatedViews.length > 0) {
+                        this.onProcessRelatedViews(entry, rowNode, feed);
+                    }
+                }
+
+                if (docfrag.childNodes.length > 0) {
+                    $(this.contentNode).append(docfrag);
+                }
+            }
+
+            // todo: add more robust handling when $totalResults does not exist, i.e., hide element completely
+            if (typeof this.feed.$totalResults !== 'undefined') {
+                const remaining = this.feed.$totalResults - (this.feed.$startIndex + this.feed.$itemsPerPage - 1);
+                this.set('remainingContent', string.substitute(this.remainingText, [remaining]));
+            }
+
+            $(this.domNode).toggleClass('list-has-more', this.hasMoreData());
+
+            if (this.options.allowEmptySelection) {
+                $(this.domNode).addClass('list-has-empty-opt');
+            }
+
+            this._loadPreviousSelections();
         }
-
-        this.onApplyRowTemplate(entry, rowNode);
-        if (this.relatedViews.length > 0) {
-          this.onProcessRelatedViews(entry, rowNode, feed);
-        }
-      }
-
-      if (docfrag.childNodes.length > 0) {
-        $(this.contentNode).append(docfrag);
-      }
-    }
-
-    // todo: add more robust handling when $totalResults does not exist, i.e., hide element completely
-    if (typeof this.feed.$totalResults !== 'undefined') {
-      const remaining = this.feed.$totalResults - (this.feed.$startIndex + this.feed.$itemsPerPage - 1);
-      this.set('remainingContent', string.substitute(this.remainingText, [remaining]));
-    }
-
-    $(this.domNode).toggleClass('list-has-more', this.hasMoreData());
-
-    if (this.options.allowEmptySelection) {
-      $(this.domNode).addClass('list-has-empty-opt');
-    }
-
-    this._loadPreviousSelections();
   },
   /**
    * Creates SDataResourceCollectionRequest instance and sets a number of known properties.
