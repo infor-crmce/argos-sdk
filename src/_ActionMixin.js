@@ -70,9 +70,9 @@ class _ActionMixin {
     const el = $(evt.target).closest('[data-action]').get(0);
     const action = $(el).attr('data-action');
 
-    if (action && this._isValidElementForAction(el) && this.hasAction(action, evt, el)) {
+    if (action && this._isValidElementForAction(el) && this.onCheckAction(action, evt, el)) {
       const parameters = this._getParametersForAction(action, evt, el);
-      this.invokeAction(action, parameters, evt, el);
+      this.onInvokeAction(action, parameters, evt, el);
       evt.stopPropagation();
     }
   }
@@ -110,6 +110,10 @@ class _ActionMixin {
     return parameters;
   }
 
+  onCheckAction(name, evt, el) {
+    return this.hasAction(name, evt, el);
+  }
+
   /**
    * Determines if the view contains a function with the given name
    * @param {String} name Name of function being tested.
@@ -119,6 +123,10 @@ class _ActionMixin {
    */
   hasAction(name/* , evt, el*/) {
     return (typeof this.container[name] === 'function');
+  }
+
+  onInvokeAction(name, parameters, evt, el) {
+    this.invokeAction(name, parameters, evt, el);
   }
 
   /**
