@@ -142,6 +142,12 @@ const __class = declare('argos.MainToolbar', [Toolbar], /** @lends argos.MainToo
   },
   buildPersonalizations: function buildPersonalizations() {
     const sohoColors = Soho.theme.personalizationColors();
+    sohoColors.uplift = {
+      id: 'uplift',
+      name: 'Uplift',
+      backgroundColorClass: 'uplift01',
+      value: '#39135d',
+    };
 
     if (App && App.preferences && App.preferences.colorId) {
       const savedPersolization = sohoColors[App.preferences.colorId];
@@ -241,7 +247,7 @@ const __class = declare('argos.MainToolbar', [Toolbar], /** @lends argos.MainToo
   /**
    * Event handler that fires when the toolbar title is clicked.
    */
-  onTitleClick: function onTitleClick(/* evt*/) {},
+  onTitleClick: function onTitleClick(/* evt*/) { },
   setMode: function setMode(onLine) {
     $(this.domNode).removeClass('offline');
     if (!onLine) {
