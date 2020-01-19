@@ -275,7 +275,7 @@ const __class = declare('argos._ListBase', [View, _PullToRefreshMixin], /** @len
    * The template used to render the single list action row.
    */
   listActionTemplate: new Simplate([
-    '<ul id="popupmenu-{%= $$.getItemActionKey($) %}" data-dojo-attach-point="actionsNode" class="popupmenu">',
+    '<ul id="popupmenu-{%= $$.getItemActionKey($) %}" data-dojo-attach-point="actionsNode" class="actions-row popupmenu">',
     '{%! $$.loadingTemplate %}',
     '</ul>',
   ]),
@@ -1091,6 +1091,9 @@ const __class = declare('argos._ListBase', [View, _PullToRefreshMixin], /** @len
     let actionRow;
     if (rowNode) {
       actionRow = $(rowNode).find('.actions-row')[0];
+      if (typeof actionRow === 'undefined') {
+        throw new Error('The actions-row domNode is missing. Ensure your listActionTemplate has an "actions-row" className.');
+      }
       $(actionRow).empty();
     }
 

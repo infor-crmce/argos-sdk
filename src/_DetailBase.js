@@ -260,7 +260,7 @@ const __class = declare('argos._DetailBase', [View, TabWidget], /** @lends argos
     </button>`,
     '{% } %}',
     '<label>{%: $.label %}</label>',
-    '<span class="data">{%= $.value %}</span>',
+    '<span class="data" style="visibility:hidden" hidden>{%= $.value %}</span>',
     '</a>',
     '</li>',
   ]),
